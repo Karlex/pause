@@ -49,9 +49,9 @@
 	/* ----------------------------------------
      TYPOGRAPHY
      ---------------------------------------- */
-	--font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-		"SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-	--font-mono: "JetBrains Mono", "SF Mono", Menlo, Monaco, "Courier New", monospace;
+	--font-sans: "Commit Mono", "JetBrains Mono", "SF Mono", -apple-system,
+		BlinkMacSystemFont, sans-serif;
+	--font-mono: "Commit Mono", "JetBrains Mono", "SF Mono", Menlo, Monaco, monospace;
 
 	/* ----------------------------------------
      BORDER RADIUS
@@ -131,7 +131,7 @@ body {
 	background-color: #1c1c1e !important;
 	border: 1px solid rgba(255, 255, 255, 0.1) !important;
 	border-radius: 12px !important;
-	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif !important;
+	font-family: "Commit Mono", "JetBrains Mono", "SF Mono", sans-serif !important;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
 

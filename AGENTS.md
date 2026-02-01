@@ -1,8 +1,8 @@
-# Pause - AI Agent Guide
+# Keiyaku - AI Agent Guide
 
 ## Project Overview
 
-Pause is a self-hosted leave and time management platform with Apple-inspired design.
+Keiyaku is a self-hosted leave and time management platform with Apple-inspired design.
 
 ## Commands
 

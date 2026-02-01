@@ -25,7 +25,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "Pause — Leave Management",
+				title: "Keiyaku — Leave Management",
 			},
 		],
 		links: [
@@ -49,7 +49,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			},
 			{
 				rel: "stylesheet",
-				href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap",
+				href: "https://fonts.cdnfonts.com/css/commit-mono",
 			},
 		],
 	}),

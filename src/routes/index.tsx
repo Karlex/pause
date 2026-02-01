@@ -75,7 +75,7 @@ function LoginPage() {
 						transition={{ delay: 0.15, duration: 0.4 }}
 						className="mt-3 text-[15px] font-medium text-fg-primary tracking-[-0.01em]"
 					>
-						Pause
+						Keiyaku
 					</motion.span>
 				</div>
 

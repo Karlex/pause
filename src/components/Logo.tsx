@@ -5,23 +5,22 @@ interface LogoProps {
 	animate?: boolean;
 }
 
-export function Logo({ size = "md", animate = true }: LogoProps) {
-	const sizes = {
-		sm: "text-[18px]",
-		md: "text-[22px]",
-		lg: "text-[28px]",
-	};
+const sizes = {
+	sm: "text-[16px]",
+	md: "text-[20px]",
+	lg: "text-[24px]",
+};
 
+export function Logo({ size = "md", animate = true }: LogoProps) {
 	const content = (
 		<span
-			className={`font-mono font-semibold tracking-tight ${sizes[size]}`}
+			className={`font-semibold text-white/90 ${sizes[size]}`}
 			style={{
-				fontFamily: '"JetBrains Mono", "SF Mono", "Fira Code", monospace',
-				letterSpacing: "-0.03em",
+				fontFamily: '"Commit Mono", "JetBrains Mono", "SF Mono", monospace',
+				letterSpacing: "-0.02em",
 			}}
 		>
-			<span className="text-white">P</span>
-			<span className="text-white/70">ause</span>
+			Keiyaku
 		</span>
 	);
 
@@ -30,7 +29,7 @@ export function Logo({ size = "md", animate = true }: LogoProps) {
 			<motion.div
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
-				transition={{ delay: 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+				transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
 			>
 				{content}
 			</motion.div>
@@ -38,4 +37,30 @@ export function Logo({ size = "md", animate = true }: LogoProps) {
 	}
 
 	return content;
+}
+
+export function LogoIcon({ className = "w-6 h-6" }: { className?: string }) {
+	return (
+		<svg
+			className={className}
+			viewBox="0 0 32 32"
+			fill="none"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<title>Keiyaku</title>
+			<rect x="5" y="4" width="7" height="24" rx="2" fill="currentColor" />
+			<path
+				d="M12 15 L26 5"
+				stroke="currentColor"
+				strokeWidth="5"
+				strokeLinecap="round"
+			/>
+			<path
+				d="M12 17 L26 27"
+				stroke="currentColor"
+				strokeWidth="5"
+				strokeLinecap="round"
+			/>
+		</svg>
+	);
 }

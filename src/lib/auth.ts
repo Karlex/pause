@@ -5,7 +5,7 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
-	appName: "Pause",
+	appName: "Keiyaku",
 	basePath: "/api/auth",
 
 	database: drizzleAdapter(db, {

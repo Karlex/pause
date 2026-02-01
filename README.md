@@ -1,4 +1,4 @@
-# Pause
+# Keiyaku
 
 An open-source, self-hosted leave and time management platform with an Apple-inspired design.
 
@@ -37,8 +37,8 @@ An open-source, self-hosted leave and time management platform with an Apple-ins
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pause.git
-cd pause
+git clone https://github.com/yourusername/keiyaku.git
+cd keiyaku
 
 # Install dependencies
 bun install
@@ -91,4 +91,4 @@ MIT License
 
 ---
 
-*Pause — Take time for what matters*
+*Keiyaku — Take time for what matters*
