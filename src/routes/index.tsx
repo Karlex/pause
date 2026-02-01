@@ -1,118 +1,288 @@
-import { createFileRoute } from '@tanstack/react-router'
-import {
-  Zap,
-  Server,
-  Route as RouteIcon,
-  Shield,
-  Waves,
-  Sparkles,
-} from 'lucide-react'
+import { useForm } from "@tanstack/react-form";
+import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "motion/react";
+import { useId, useState } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Dashboard } from "@/components/dashboard";
+import { Logo } from "@/components/Logo";
+import { Button, Input } from "@/components/ui";
+import { authClient } from "@/lib/auth-client";
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute("/")({
+	component: IndexPage,
+});
 
-function App() {
-  const features = [
-    {
-      icon: <Zap className="w-12 h-12 text-cyan-400" />,
-      title: 'Powerful Server Functions',
-      description:
-        'Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.',
-    },
-    {
-      icon: <Server className="w-12 h-12 text-cyan-400" />,
-      title: 'Flexible Server Side Rendering',
-      description:
-        'Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.',
-    },
-    {
-      icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-      title: 'API Routes',
-      description:
-        'Build type-safe API endpoints alongside your application. No separate backend needed.',
-    },
-    {
-      icon: <Shield className="w-12 h-12 text-cyan-400" />,
-      title: 'Strongly Typed Everything',
-      description:
-        'End-to-end type safety from server to client. Catch errors before they reach production.',
-    },
-    {
-      icon: <Waves className="w-12 h-12 text-cyan-400" />,
-      title: 'Full Streaming Support',
-      description:
-        'Stream data from server to client progressively. Perfect for AI applications and real-time updates.',
-    },
-    {
-      icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-      title: 'Next Generation Ready',
-      description:
-        'Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.',
-    },
-  ]
+function IndexPage() {
+	const { data: session, isPending } = authClient.useSession();
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
-        <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <img
-              src="/tanstack-circle-logo.png"
-              alt="TanStack Logo"
-              className="w-24 h-24 md:w-32 md:h-32"
-            />
-            <h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
-              <span className="text-gray-300">TANSTACK</span>{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                START
-              </span>
-            </h1>
-          </div>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            The framework for next generation AI applications
-          </p>
-          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            Full-stack framework powered by TanStack Router for React and Solid.
-            Build modern applications with server functions, streaming, and type
-            safety.
-          </p>
-          <div className="flex flex-col items-center gap-4">
-            <a
-              href="https://tanstack.com/start"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-cyan-500/50"
-            >
-              Documentation
-            </a>
-            <p className="text-gray-400 text-sm mt-2">
-              Begin your TanStack Start journey by editing{' '}
-              <code className="px-2 py-1 bg-slate-700 rounded text-cyan-400">
-                /src/routes/index.tsx
-              </code>
-            </p>
-          </div>
-        </div>
-      </section>
+	if (isPending) {
+		return <LoadingState />;
+	}
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
-            >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  )
+	if (session?.user) {
+		return (
+			<DashboardLayout>
+				<Dashboard user={session.user} />
+			</DashboardLayout>
+		);
+	}
+
+	return <LoginPage />;
+}
+
+function LoadingState() {
+	return (
+		<div className="min-h-screen bg-primary flex items-center justify-center">
+			<motion.div
+				className="w-6 h-6 rounded-full border border-fg-tertiary border-t-fg-primary"
+				animate={{ rotate: 360 }}
+				transition={{
+					duration: 1,
+					repeat: Infinity,
+					ease: "linear",
+				}}
+			/>
+		</div>
+	);
+}
+
+function LoginPage() {
+	const [magicLinkSent, setMagicLinkSent] = useState(false);
+	const [magicLinkEmail, setMagicLinkEmail] = useState("");
+
+	if (magicLinkSent) {
+		return (
+			<MagicLinkSuccess
+				email={magicLinkEmail}
+				onReset={() => setMagicLinkSent(false)}
+			/>
+		);
+	}
+
+	return (
+		<div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6">
+			<motion.div
+				initial={{ opacity: 0, y: 16 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+				className="w-full max-w-[340px]"
+			>
+				<div className="flex flex-col items-center mb-8">
+					<Logo size="md" />
+					<motion.span
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.15, duration: 0.4 }}
+						className="mt-3 text-[15px] font-medium text-fg-primary tracking-[-0.01em]"
+					>
+						Pause
+					</motion.span>
+				</div>
+
+				<motion.div
+					initial={{ opacity: 0, y: 8 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+					className="bg-elevated rounded-2xl p-6 shadow-lg border border-separator"
+				>
+					<LoginForm
+						onMagicLinkSent={(email) => {
+							setMagicLinkEmail(email);
+							setMagicLinkSent(true);
+						}}
+					/>
+				</motion.div>
+			</motion.div>
+		</div>
+	);
+}
+
+function LoginForm({
+	onMagicLinkSent,
+}: {
+	onMagicLinkSent: (email: string) => void;
+}) {
+	const emailId = useId();
+	const passwordId = useId();
+	const [isLoading, setIsLoading] = useState(false);
+	const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
+
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+		},
+		onSubmit: async ({ value }) => {
+			setIsLoading(true);
+			const result = await authClient.signIn.email({
+				email: value.email,
+				password: value.password,
+			});
+			setIsLoading(false);
+
+			if (!result.error) {
+				window.location.reload();
+			}
+		},
+	});
+
+	const handleMagicLink = async () => {
+		const email = form.getFieldValue("email");
+		if (!email) return;
+
+		setIsMagicLinkLoading(true);
+		const result = await authClient.signIn.magicLink({
+			email,
+			callbackURL: "/",
+		});
+		setIsMagicLinkLoading(false);
+
+		if (!result.error) {
+			onMagicLinkSent(email);
+		}
+	};
+
+	return (
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				form.handleSubmit();
+			}}
+			className="space-y-4"
+		>
+			<form.Field name="email">
+				{(field) => (
+					<Input
+						id={emailId}
+						label="Email"
+						type="email"
+						value={field.state.value}
+						onChange={(e) => field.handleChange(e.target.value)}
+						onBlur={field.handleBlur}
+						required
+						autoComplete="email"
+						placeholder="name@company.com"
+					/>
+				)}
+			</form.Field>
+
+			<form.Field name="password">
+				{(field) => (
+					<div className="space-y-1.5">
+						<div className="flex items-center justify-between">
+							<label
+								htmlFor={passwordId}
+								className="block text-[13px] font-medium text-fg-secondary"
+							>
+								Password
+							</label>
+							<motion.button
+								type="button"
+								whileHover={{ scale: 1.02 }}
+								className="text-[12px] text-fg-tertiary hover:text-fg-secondary transition-colors"
+							>
+								Forgot?
+							</motion.button>
+						</div>
+						<Input
+							id={passwordId}
+							type="password"
+							value={field.state.value}
+							onChange={(e) => field.handleChange(e.target.value)}
+							onBlur={field.handleBlur}
+							required
+							autoComplete="current-password"
+							placeholder="••••••••"
+						/>
+					</div>
+				)}
+			</form.Field>
+
+			<div className="pt-1">
+				<Button type="submit" isLoading={isLoading}>
+					Sign in
+				</Button>
+			</div>
+
+			<div className="flex items-center justify-center py-1">
+				<span className="text-[13px] text-fg-tertiary">or</span>
+			</div>
+
+			<Button
+				type="button"
+				variant="secondary"
+				isLoading={isMagicLinkLoading}
+				onClick={handleMagicLink}
+			>
+				Continue with Magic Link
+			</Button>
+		</form>
+	);
+}
+
+function MagicLinkSuccess({
+	email,
+	onReset,
+}: {
+	email: string;
+	onReset: () => void;
+}) {
+	return (
+		<div className="min-h-screen bg-primary flex items-center justify-center p-6">
+			<motion.div
+				initial={{ opacity: 0, scale: 0.95 }}
+				animate={{ opacity: 1, scale: 1 }}
+				transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+				className="w-full max-w-[340px] text-center"
+			>
+				<motion.div
+					initial={{ scale: 0 }}
+					animate={{ scale: 1 }}
+					transition={{
+						delay: 0.2,
+						type: "spring",
+						stiffness: 300,
+						damping: 20,
+					}}
+					className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-5"
+				>
+					<svg
+						className="w-6 h-6 text-accent"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						strokeWidth={1.5}
+					>
+						<title>Success</title>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							d="M5 13l4 4L19 7"
+						/>
+					</svg>
+				</motion.div>
+
+				<motion.div
+					initial={{ opacity: 0, y: 10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.3, duration: 0.4 }}
+				>
+					<h1 className="text-xl font-medium text-fg-primary tracking-[-0.01em] mb-2">
+						Check your email
+					</h1>
+					<p className="text-fg-secondary text-[15px] mb-1">
+						We sent a sign-in link to
+					</p>
+					<p className="text-fg-primary font-medium text-[15px] mb-6">
+						{email}
+					</p>
+
+					<Button variant="ghost" onClick={onReset}>
+						Use a different email
+					</Button>
+				</motion.div>
+			</motion.div>
+		</div>
+	);
 }
