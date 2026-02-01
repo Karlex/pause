@@ -204,7 +204,6 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 		{
 			body: t.Object({
 				email: t.String({ format: "email" }),
-				password: t.String({ minLength: 8 }),
 				name: t.String({ minLength: 1 }),
 				role: t.Union([
 					t.Literal("employee"),

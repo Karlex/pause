@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { BaseSelect, type SelectOption } from "@/components/ui";
 import { api } from "@/lib/api-client";
 
 interface RequestModalProps {
@@ -25,6 +26,13 @@ const LEAVE_TYPE_NAMES: Record<string, string> = {
 	holiday: "Holiday Leave",
 	emergency: "Emergency Leave",
 };
+
+const LEAVE_TYPE_OPTIONS: SelectOption[] = [
+	{ value: "lt_annual", label: "Annual Leave" },
+	{ value: "lt_sick", label: "Sick Leave" },
+	{ value: "lt_holiday", label: "Holiday Leave" },
+	{ value: "lt_emergency", label: "Emergency Leave" },
+];
 
 export function RequestModal({
 	isOpen,
@@ -231,75 +239,14 @@ export function RequestModal({
 											</p>
 										</div>
 									) : (
-										<div className="relative">
-											<label
-												htmlFor={leaveTypeId}
-												className="block text-[12px] text-white/50 mb-1.5"
-											>
-												Leave Type
-											</label>
-											<select
-												id={leaveTypeId}
-												value={selectedLeaveTypeId}
-												onChange={(e) => setSelectedLeaveTypeId(e.target.value)}
-												className="w-full px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-[13px] text-white focus:outline-none focus:border-white/20 transition-colors cursor-pointer appearance-none"
-												style={{ backgroundColor: "#0a0a0a" }}
-												required
-											>
-												<option
-													value=""
-													disabled
-													className="bg-[#0a0a0a] text-white/40"
-												>
-													Select type
-												</option>
-												<option
-													value="lt_annual"
-													className="bg-[#0a0a0a] text-white"
-												>
-													Annual Leave
-												</option>
-												<option
-													value="lt_sick"
-													className="bg-[#0a0a0a] text-white"
-												>
-													Sick Leave
-												</option>
-												<option
-													value="lt_holiday"
-													className="bg-[#0a0a0a] text-white"
-												>
-													Holiday Leave
-												</option>
-												<option
-													value="lt_emergency"
-													className="bg-[#0a0a0a] text-white"
-												>
-													Emergency Leave
-												</option>
-											</select>
-											<div
-												className="absolute right-3 top-[34px] -translate-y-1/2 pointer-events-none"
-												aria-hidden="true"
-											>
-												<svg
-													width="8"
-													height="5"
-													viewBox="0 0 10 6"
-													fill="none"
-													className="text-white/30"
-													aria-hidden="true"
-												>
-													<path
-														d="M1 1L5 5L9 1"
-														stroke="currentColor"
-														strokeWidth="1.5"
-														strokeLinecap="round"
-														strokeLinejoin="round"
-													/>
-												</svg>
-											</div>
-										</div>
+										<BaseSelect
+											id={leaveTypeId}
+											label="Leave Type"
+											options={LEAVE_TYPE_OPTIONS}
+											placeholder="Select type"
+											value={selectedLeaveTypeId}
+											onChange={(value) => setSelectedLeaveTypeId(value)}
+										/>
 									)}
 								</div>
 								<div className="flex items-center gap-2.5">
