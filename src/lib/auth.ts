@@ -27,7 +27,12 @@ export const auth = betterAuth({
 		magicLink({
 			sendMagicLink: async ({ email, url }) => {
 				// TODO: Integrate with Resend
-				console.log(`[Magic Link] Send to ${email}: ${url}`);
+				// SECURITY: Never log the full URL in production - it contains auth tokens
+				if (process.env.NODE_ENV === "development") {
+					console.log(`[Magic Link] Send to ${email}: ${url}`);
+				} else {
+					console.log(`[Magic Link] Send to ${email}: [REDACTED]`);
+				}
 			},
 			expiresIn: 60 * 10, // 10 minutes
 		}),

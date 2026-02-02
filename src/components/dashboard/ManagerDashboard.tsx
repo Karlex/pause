@@ -2,6 +2,7 @@ import { CalendarBlank, Users } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { motion } from "motion/react";
+import { Avatar } from "@/components/Avatar";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { api } from "@/lib/api-client";
 
@@ -184,11 +185,7 @@ export function ManagerDashboard() {
 							<div className="flex items-start justify-between mb-4">
 								<div className="flex items-center gap-3">
 									<div className="relative">
-										<div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center">
-											<span className="text-[14px] font-medium text-white/60">
-												{member.name.charAt(0).toUpperCase()}
-											</span>
-										</div>
+										<Avatar name={member.name} size={40} />
 										{member.isOnLeave && (
 											<div
 												className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-white/30 border-2 border-[#0a0a0a]"

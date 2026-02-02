@@ -12,9 +12,16 @@ if (!ENCRYPTION_KEY) {
 }
 
 // Derive a proper 32-byte key using PBKDF2
-// This is much more secure than simple padding
-const SALT = "pause-leave-management-salt-v1"; // In production, store this separately
+// SECURITY: Salt should be stored separately from code in production
+const SALT = process.env.ENCRYPTION_SALT || "pause-leave-management-salt-v1";
 const ITERATIONS = 100000;
+
+if (!process.env.ENCRYPTION_SALT && process.env.NODE_ENV === "production") {
+	console.warn(
+		"[SECURITY WARNING] ENCRYPTION_SALT not set. Using default salt. " +
+			"Set ENCRYPTION_SALT environment variable for production.",
+	);
+}
 
 const getKey = async (): Promise<CryptoKey> => {
 	const encoder = new TextEncoder();

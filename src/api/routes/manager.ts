@@ -5,6 +5,14 @@ import { leaveBalances, leaveRequests, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
+// Helper to safely extract single relation object
+function getRelation<T>(relation: T | T[] | undefined): T | undefined {
+	if (Array.isArray(relation)) {
+		return relation[0];
+	}
+	return relation;
+}
+
 export const managerRoutes = new Elysia({ prefix: "/manager" })
 	.onBeforeHandle(async ({ request, set }) => {
 		const session = await auth.api.getSession({
@@ -94,6 +102,18 @@ export const managerRoutes = new Elysia({ prefix: "/manager" })
 						limit: 3,
 					});
 
+					// Get pending requests (for manager approval)
+					const pendingRequests = await db.query.leaveRequests.findMany({
+						where: and(
+							eq(leaveRequests.userId, member.id),
+							eq(leaveRequests.status, "pending"),
+						),
+						with: {
+							leaveType: true,
+						},
+						orderBy: sql`${leaveRequests.createdAt} DESC`,
+					});
+
 					// Check if currently on leave
 					const currentlyOnLeave = await db.query.leaveRequests.findFirst({
 						where: and(
@@ -111,21 +131,41 @@ export const managerRoutes = new Elysia({ prefix: "/manager" })
 						image: member.image ?? undefined,
 						role: member.role,
 						balances: balances
-							.filter((b) => ["annual", "sick"].includes(b.leaveType.code)) // Only show Annual and Sick leave
-							.map((b) => ({
-								leaveTypeName: b.leaveType.name,
-								leaveTypeCode: b.leaveType.code,
-								allowance: b.allowance / 8, // Convert hours to days
-								used: b.used / 8,
-								remaining: (b.allowance - b.used - b.scheduled) / 8,
-							})),
-						upcomingRequests: upcomingRequests.map((r) => ({
-							id: r.id,
-							startDate: r.startDate,
-							endDate: r.endDate,
-							leaveTypeName: r.leaveType.name,
-							days: r.totalHours / 8,
-						})),
+							.filter((b) => {
+								const leaveType = getRelation(b.leaveType);
+								return leaveType && ["annual", "sick"].includes(leaveType.code);
+							}) // Only show Annual and Sick leave
+							.map((b) => {
+								const leaveType = getRelation(b.leaveType);
+								return {
+									leaveTypeName: leaveType?.name || "Leave",
+									leaveTypeCode: leaveType?.code || "unknown",
+									allowance: b.allowance / 8, // Convert hours to days
+									used: b.used / 8,
+									remaining: (b.allowance - b.used - b.scheduled) / 8,
+								};
+							}),
+						upcomingRequests: upcomingRequests.map((r) => {
+							const leaveType = getRelation(r.leaveType);
+							return {
+								id: r.id,
+								startDate: r.startDate,
+								endDate: r.endDate,
+								leaveTypeName: leaveType?.name || "Leave",
+								days: r.totalHours / 8,
+							};
+						}),
+						pendingRequests: pendingRequests.map((r) => {
+							const leaveType = getRelation(r.leaveType);
+							return {
+								id: r.id,
+								startDate: r.startDate,
+								endDate: r.endDate,
+								leaveTypeName: leaveType?.name || "Leave",
+								days: r.totalHours / 8,
+								createdAt: r.createdAt,
+							};
+						}),
 						isOnLeave: !!currentlyOnLeave,
 					};
 				}),
@@ -164,6 +204,16 @@ export const managerRoutes = new Elysia({ prefix: "/manager" })
 									endDate: t.String(),
 									leaveTypeName: t.String(),
 									days: t.Number(),
+								}),
+							),
+							pendingRequests: t.Array(
+								t.Object({
+									id: t.String(),
+									startDate: t.String(),
+									endDate: t.String(),
+									leaveTypeName: t.String(),
+									days: t.Number(),
+									createdAt: t.Date(),
 								}),
 							),
 							isOnLeave: t.Boolean(),

@@ -1,4 +1,7 @@
+import { eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
+import { db } from "@/db";
+import { leaveTypes } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { getUserBalances } from "@/lib/balances";
 import { logger } from "@/lib/logger";
@@ -57,6 +60,40 @@ export const leaveBalancesRoutes = new Elysia({ prefix: "/leave-balances" })
 							used: t.Number(),
 							scheduled: t.Number(),
 							remaining: t.Number(),
+						}),
+					),
+				}),
+				401: t.Object({ error: t.String() }),
+				500: t.Object({ error: t.String() }),
+			},
+		},
+	)
+	.get(
+		"/types",
+		async ({ set }) => {
+			try {
+				const types = await db.query.leaveTypes.findMany({
+					where: eq(leaveTypes.isActive, true),
+					orderBy: leaveTypes.sortOrder,
+				});
+
+				return { types };
+			} catch (error) {
+				logger.error({ error }, "Failed to fetch leave types");
+				set.status = 500;
+				return { error: "Failed to fetch leave types" };
+			}
+		},
+		{
+			response: {
+				200: t.Object({
+					types: t.Array(
+						t.Object({
+							id: t.String(),
+							code: t.String(),
+							name: t.String(),
+							colour: t.String(),
+							sortOrder: t.Number(),
 						}),
 					),
 				}),

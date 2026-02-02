@@ -55,7 +55,7 @@ export function RequestModal({
 		return "";
 	});
 
-	// Reset dates when modal opens with different leave type
+	// Reset form when modal opens
 	useEffect(() => {
 		if (isOpen) {
 			setStartDate(null);
@@ -63,9 +63,17 @@ export function RequestModal({
 			setNote("");
 			setHalfDay(false);
 			setError("");
+			// Reset leave type to preselected value
+			if (
+				preselectedLeaveTypeCode &&
+				LEAVE_TYPE_CODES[preselectedLeaveTypeCode]
+			) {
+				setSelectedLeaveTypeId(LEAVE_TYPE_CODES[preselectedLeaveTypeCode]);
+			} else {
+				setSelectedLeaveTypeId("");
+			}
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isOpen]);
+	}, [isOpen, preselectedLeaveTypeCode]);
 	const [note, setNote] = useState("");
 	const [halfDay, setHalfDay] = useState(false);
 	const [error, setError] = useState("");

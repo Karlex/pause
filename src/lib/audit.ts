@@ -18,7 +18,7 @@ export interface SensitiveDataAccessEntry {
 	userId: string;
 	accessedUserId?: string;
 	fieldName: string;
-	action: "view" | "edit";
+	action: "view" | "edit" | "delete";
 	reason?: string;
 	metadata?: {
 		ip?: string;

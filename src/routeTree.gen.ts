@@ -13,12 +13,18 @@ import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LayoutTimeTrackingRouteImport } from './routes/_layout/time-tracking'
 import { Route as LayoutTimeOffRouteImport } from './routes/_layout/time-off'
+import { Route as LayoutTeamCalendarRouteImport } from './routes/_layout/team-calendar'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutPoliciesRouteImport } from './routes/_layout/policies'
 import { Route as LayoutPeopleRouteImport } from './routes/_layout/people'
 import { Route as LayoutDocumentsRouteImport } from './routes/_layout/documents'
+import { Route as LayoutCalendarRouteImport } from './routes/_layout/calendar'
+import { Route as LayoutTeamIndexRouteImport } from './routes/_layout/team/index'
 import { Route as LayoutManagerIndexRouteImport } from './routes/_layout/manager/index'
 import { Route as LayoutApprovalsIndexRouteImport } from './routes/_layout/approvals/index'
 import { Route as LayoutAdminRolesRouteImport } from './routes/_layout/admin/roles'
+import { Route as LayoutAdminPoliciesRouteImport } from './routes/_layout/admin/policies'
+import { Route as LayoutAdminHolidaysRouteImport } from './routes/_layout/admin/holidays'
 import { Route as LayoutAdminDepartmentsRouteImport } from './routes/_layout/admin/departments'
 
 const LayoutRoute = LayoutRouteImport.update({
@@ -40,9 +46,19 @@ const LayoutTimeOffRoute = LayoutTimeOffRouteImport.update({
   path: '/time-off',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutTeamCalendarRoute = LayoutTeamCalendarRouteImport.update({
+  id: '/team-calendar',
+  path: '/team-calendar',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutPoliciesRoute = LayoutPoliciesRouteImport.update({
+  id: '/policies',
+  path: '/policies',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutPeopleRoute = LayoutPeopleRouteImport.update({
@@ -53,6 +69,16 @@ const LayoutPeopleRoute = LayoutPeopleRouteImport.update({
 const LayoutDocumentsRoute = LayoutDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutCalendarRoute = LayoutCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutTeamIndexRoute = LayoutTeamIndexRouteImport.update({
+  id: '/team/',
+  path: '/team/',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutManagerIndexRoute = LayoutManagerIndexRouteImport.update({
@@ -70,6 +96,16 @@ const LayoutAdminRolesRoute = LayoutAdminRolesRouteImport.update({
   path: '/admin/roles',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutAdminPoliciesRoute = LayoutAdminPoliciesRouteImport.update({
+  id: '/admin/policies',
+  path: '/admin/policies',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAdminHolidaysRoute = LayoutAdminHolidaysRouteImport.update({
+  id: '/admin/holidays',
+  path: '/admin/holidays',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAdminDepartmentsRoute = LayoutAdminDepartmentsRouteImport.update({
   id: '/admin/departments',
   path: '/admin/departments',
@@ -78,80 +114,116 @@ const LayoutAdminDepartmentsRoute = LayoutAdminDepartmentsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof LayoutCalendarRoute
   '/documents': typeof LayoutDocumentsRoute
   '/people': typeof LayoutPeopleRoute
+  '/policies': typeof LayoutPoliciesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/team-calendar': typeof LayoutTeamCalendarRoute
   '/time-off': typeof LayoutTimeOffRoute
   '/time-tracking': typeof LayoutTimeTrackingRoute
   '/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/admin/holidays': typeof LayoutAdminHolidaysRoute
+  '/admin/policies': typeof LayoutAdminPoliciesRoute
   '/admin/roles': typeof LayoutAdminRolesRoute
   '/approvals/': typeof LayoutApprovalsIndexRoute
   '/manager/': typeof LayoutManagerIndexRoute
+  '/team/': typeof LayoutTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof LayoutCalendarRoute
   '/documents': typeof LayoutDocumentsRoute
   '/people': typeof LayoutPeopleRoute
+  '/policies': typeof LayoutPoliciesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/team-calendar': typeof LayoutTeamCalendarRoute
   '/time-off': typeof LayoutTimeOffRoute
   '/time-tracking': typeof LayoutTimeTrackingRoute
   '/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/admin/holidays': typeof LayoutAdminHolidaysRoute
+  '/admin/policies': typeof LayoutAdminPoliciesRoute
   '/admin/roles': typeof LayoutAdminRolesRoute
   '/approvals': typeof LayoutApprovalsIndexRoute
   '/manager': typeof LayoutManagerIndexRoute
+  '/team': typeof LayoutTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/calendar': typeof LayoutCalendarRoute
   '/_layout/documents': typeof LayoutDocumentsRoute
   '/_layout/people': typeof LayoutPeopleRoute
+  '/_layout/policies': typeof LayoutPoliciesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/team-calendar': typeof LayoutTeamCalendarRoute
   '/_layout/time-off': typeof LayoutTimeOffRoute
   '/_layout/time-tracking': typeof LayoutTimeTrackingRoute
   '/_layout/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/_layout/admin/holidays': typeof LayoutAdminHolidaysRoute
+  '/_layout/admin/policies': typeof LayoutAdminPoliciesRoute
   '/_layout/admin/roles': typeof LayoutAdminRolesRoute
   '/_layout/approvals/': typeof LayoutApprovalsIndexRoute
   '/_layout/manager/': typeof LayoutManagerIndexRoute
+  '/_layout/team/': typeof LayoutTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/calendar'
     | '/documents'
     | '/people'
+    | '/policies'
     | '/settings'
+    | '/team-calendar'
     | '/time-off'
     | '/time-tracking'
     | '/admin/departments'
+    | '/admin/holidays'
+    | '/admin/policies'
     | '/admin/roles'
     | '/approvals/'
     | '/manager/'
+    | '/team/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/calendar'
     | '/documents'
     | '/people'
+    | '/policies'
     | '/settings'
+    | '/team-calendar'
     | '/time-off'
     | '/time-tracking'
     | '/admin/departments'
+    | '/admin/holidays'
+    | '/admin/policies'
     | '/admin/roles'
     | '/approvals'
     | '/manager'
+    | '/team'
   id:
     | '__root__'
     | '/'
     | '/_layout'
+    | '/_layout/calendar'
     | '/_layout/documents'
     | '/_layout/people'
+    | '/_layout/policies'
     | '/_layout/settings'
+    | '/_layout/team-calendar'
     | '/_layout/time-off'
     | '/_layout/time-tracking'
     | '/_layout/admin/departments'
+    | '/_layout/admin/holidays'
+    | '/_layout/admin/policies'
     | '/_layout/admin/roles'
     | '/_layout/approvals/'
     | '/_layout/manager/'
+    | '/_layout/team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,11 +261,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutTimeOffRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/team-calendar': {
+      id: '/_layout/team-calendar'
+      path: '/team-calendar'
+      fullPath: '/team-calendar'
+      preLoaderRoute: typeof LayoutTeamCalendarRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/policies': {
+      id: '/_layout/policies'
+      path: '/policies'
+      fullPath: '/policies'
+      preLoaderRoute: typeof LayoutPoliciesRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/people': {
@@ -208,6 +294,20 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/documents'
       preLoaderRoute: typeof LayoutDocumentsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/calendar': {
+      id: '/_layout/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof LayoutCalendarRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/team/': {
+      id: '/_layout/team/'
+      path: '/team'
+      fullPath: '/team/'
+      preLoaderRoute: typeof LayoutTeamIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/manager/': {
@@ -231,6 +331,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRolesRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/admin/policies': {
+      id: '/_layout/admin/policies'
+      path: '/admin/policies'
+      fullPath: '/admin/policies'
+      preLoaderRoute: typeof LayoutAdminPoliciesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/admin/holidays': {
+      id: '/_layout/admin/holidays'
+      path: '/admin/holidays'
+      fullPath: '/admin/holidays'
+      preLoaderRoute: typeof LayoutAdminHolidaysRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin/departments': {
       id: '/_layout/admin/departments'
       path: '/admin/departments'
@@ -242,27 +356,39 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutRouteChildren {
+  LayoutCalendarRoute: typeof LayoutCalendarRoute
   LayoutDocumentsRoute: typeof LayoutDocumentsRoute
   LayoutPeopleRoute: typeof LayoutPeopleRoute
+  LayoutPoliciesRoute: typeof LayoutPoliciesRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutTeamCalendarRoute: typeof LayoutTeamCalendarRoute
   LayoutTimeOffRoute: typeof LayoutTimeOffRoute
   LayoutTimeTrackingRoute: typeof LayoutTimeTrackingRoute
   LayoutAdminDepartmentsRoute: typeof LayoutAdminDepartmentsRoute
+  LayoutAdminHolidaysRoute: typeof LayoutAdminHolidaysRoute
+  LayoutAdminPoliciesRoute: typeof LayoutAdminPoliciesRoute
   LayoutAdminRolesRoute: typeof LayoutAdminRolesRoute
   LayoutApprovalsIndexRoute: typeof LayoutApprovalsIndexRoute
   LayoutManagerIndexRoute: typeof LayoutManagerIndexRoute
+  LayoutTeamIndexRoute: typeof LayoutTeamIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutCalendarRoute: LayoutCalendarRoute,
   LayoutDocumentsRoute: LayoutDocumentsRoute,
   LayoutPeopleRoute: LayoutPeopleRoute,
+  LayoutPoliciesRoute: LayoutPoliciesRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutTeamCalendarRoute: LayoutTeamCalendarRoute,
   LayoutTimeOffRoute: LayoutTimeOffRoute,
   LayoutTimeTrackingRoute: LayoutTimeTrackingRoute,
   LayoutAdminDepartmentsRoute: LayoutAdminDepartmentsRoute,
+  LayoutAdminHolidaysRoute: LayoutAdminHolidaysRoute,
+  LayoutAdminPoliciesRoute: LayoutAdminPoliciesRoute,
   LayoutAdminRolesRoute: LayoutAdminRolesRoute,
   LayoutApprovalsIndexRoute: LayoutApprovalsIndexRoute,
   LayoutManagerIndexRoute: LayoutManagerIndexRoute,
+  LayoutTeamIndexRoute: LayoutTeamIndexRoute,
 }
 
 const LayoutRouteWithChildren =

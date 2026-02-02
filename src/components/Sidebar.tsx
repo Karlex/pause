@@ -2,8 +2,10 @@ import {
 	Building,
 	CalendarBlank,
 	CheckCircle,
+	ClipboardText,
 	Clock,
 	FileText,
+	Globe,
 	House,
 	Shield,
 	UserCircle,
@@ -27,10 +29,12 @@ interface NavItem {
 // Navigation items for all authenticated users
 const mainNavItems: NavItem[] = [
 	{ label: "Home", to: "/", icon: House },
-	{ label: "Team", to: "/manager", icon: Users },
+	{ label: "Calendar", to: "/calendar", icon: CalendarBlank },
+	{ label: "Team", to: "/team", icon: Users },
 	{ label: "Time Off", to: "/time-off", icon: CalendarBlank },
 	{ label: "Time Tracking", to: "/time-tracking", icon: Clock },
 	{ label: "Documents", to: "/documents", icon: FileText },
+	{ label: "Policies", to: "/policies", icon: ClipboardText },
 ];
 
 // Admin-only navigation items (users:create permission)
@@ -38,10 +42,13 @@ const adminNavItems: NavItem[] = [
 	{ label: "People", to: "/people", icon: UserCircle },
 	{ label: "Roles", to: "/admin/roles", icon: Shield },
 	{ label: "Departments", to: "/admin/departments", icon: Building },
+	{ label: "Policies", to: "/admin/policies", icon: ClipboardText },
+	{ label: "Holidays", to: "/admin/holidays", icon: Globe },
 ];
 
-// Manager/Admin approval navigation
-const approvalNavItems: NavItem[] = [
+// Manager navigation
+const managerNavItems: NavItem[] = [
+	{ label: "Management", to: "/manager", icon: Users },
 	{ label: "Approvals", to: "/approvals", icon: CheckCircle },
 ];
 
@@ -126,11 +133,11 @@ export function Sidebar() {
 						</>
 					)}
 
-					{/* Approvals section - for managers/admins who can approve */}
+					{/* Manager section - for managers/admins */}
 					{canApproveRequests && (
 						<>
 							<li className="my-2 border-t border-white/[0.06]" />
-							{approvalNavItems.map((item) => {
+							{managerNavItems.map((item) => {
 								const isActive = location.pathname === item.to;
 								const Icon = item.icon;
 

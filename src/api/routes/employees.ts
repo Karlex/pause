@@ -285,6 +285,18 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 				return { error: "Unauthorized" };
 			}
 
+			// Check permission - any user with 'view' on 'users' can see managers
+			const result = await checkPermission({
+				userId: user.id,
+				resource: "users",
+				action: "view",
+			});
+
+			if (!result.allowed) {
+				set.status = 403;
+				return { error: "Forbidden" };
+			}
+
 			const managers = await db.query.users.findMany({
 				where: sql`${users.role} IN ('manager', 'hr_admin', 'super_admin')`,
 				columns: {
@@ -314,6 +326,7 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					),
 				}),
 				401: t.Object({ error: t.String() }),
+				403: t.Object({ error: t.String() }),
 			},
 		},
 	);

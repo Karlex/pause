@@ -434,6 +434,59 @@ export const sensitiveDataAccessLogs = pgTable("sensitive_data_access_logs", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Employee Sensitive Data (encrypted at rest)
+// All sensitive fields are encrypted using AES-256-GCM
+export const employeeSensitiveData = pgTable("employee_sensitive_data", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" })
+		.unique(),
+
+	// Contact info (encrypted)
+	phone: text("phone"), // Encrypted
+	personalEmail: text("personal_email"), // Encrypted
+	address: text("address"), // Encrypted
+
+	// Emergency contact (encrypted)
+	emergencyContactName: text("emergency_contact_name"),
+	emergencyContactPhone: text("emergency_contact_phone"), // Encrypted
+	emergencyContactRelationship: text("emergency_contact_relationship"),
+
+	// Employment details
+	contractType: text("contract_type"), // 'full_time', 'part_time', 'contractor'
+	workHours: text("work_hours"), // e.g., "37.5"
+
+	// Financial (encrypted)
+	salary: text("salary"), // Encrypted - stored as string to preserve precision
+	bankAccountNumber: text("bank_account_number"), // Encrypted
+	bankSortCode: text("bank_sort_code"), // Encrypted
+	bankAccountName: text("bank_account_name"),
+
+	// Tax/ID (encrypted)
+	taxCode: text("tax_code"), // Encrypted
+	niNumber: text("ni_number"), // Encrypted - UK National Insurance
+	idDocumentType: text("id_document_type"), // 'passport', 'driving_license', etc.
+	idDocumentNumber: text("id_document_number"), // Encrypted
+
+	// Benefits
+	benefits: jsonb("benefits").$type<{
+		hasHealthInsurance: boolean;
+		hasPension: boolean;
+		pensionContribution?: number;
+		otherBenefits?: string[];
+	}>(),
+
+	// Metadata
+	lastAccessedAt: timestamp("last_accessed_at"),
+	lastAccessedBy: text("last_accessed_by").references(() => users.id),
+
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // ============ RELATIONS ============
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -454,6 +507,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 	sessions: many(sessions),
 	accounts: many(accounts),
 	userRoles: many(userRoles),
+	sensitiveData: one(employeeSensitiveData, {
+		fields: [users.id],
+		references: [employeeSensitiveData.userId],
+	}),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -579,6 +636,20 @@ export const sensitiveDataAccessLogsRelations = relations(
 		}),
 		accessedUser: one(users, {
 			fields: [sensitiveDataAccessLogs.accessedUserId],
+			references: [users.id],
+		}),
+	}),
+);
+
+export const employeeSensitiveDataRelations = relations(
+	employeeSensitiveData,
+	({ one }) => ({
+		user: one(users, {
+			fields: [employeeSensitiveData.userId],
+			references: [users.id],
+		}),
+		lastAccessedByUser: one(users, {
+			fields: [employeeSensitiveData.lastAccessedBy],
 			references: [users.id],
 		}),
 	}),

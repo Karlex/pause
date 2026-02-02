@@ -4,15 +4,18 @@ import {
 	CalendarBlank,
 	CheckCircle,
 	Clock,
+	Trash,
 	WarningCircle,
 } from "@phosphor-icons/react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { useCanDelete } from "@/hooks/usePermissions";
 import { api } from "@/lib/api-client";
 import { BalanceCards } from "./BalanceCards";
 import { RequestModal } from "./RequestModal";
+import { WhosOutWidget } from "./WhosOutWidget";
 
 interface LeaveRequest {
 	id: string;
@@ -65,7 +68,7 @@ export function Dashboard({ user }: DashboardProps) {
 
 				{/* Right Column - 1/3 width */}
 				<div className="space-y-4">
-					<TodaysSchedule />
+					<WhosOutWidget />
 					<RecentActivity />
 				</div>
 			</div>
@@ -125,6 +128,28 @@ function DashboardHeader({ firstName }: { firstName: string }) {
 }
 
 function UpcomingTimeOff() {
+	const queryClient = useQueryClient();
+	const canDeleteAny = useCanDelete("leave_requests");
+
+	const deleteMutation = useMutation({
+		mutationFn: async (requestId: string) => {
+			const res = await api.api["leave-requests"][requestId].delete();
+			if (res.error) {
+				throw new Error(
+					typeof res.error.value === "string"
+						? res.error.value
+						: "Failed to delete request",
+				);
+			}
+			return res.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["leave-requests"] });
+			queryClient.invalidateQueries({ queryKey: ["leave-balances"] });
+			queryClient.invalidateQueries({ queryKey: ["team-calendar"] });
+		},
+	});
+
 	const {
 		data: response,
 		isLoading,
@@ -240,10 +265,17 @@ function UpcomingTimeOff() {
 					requests.map((request) => (
 						<TimeOffItem
 							key={request.id}
+							id={request.id}
 							type={request.leaveType.name}
 							dates={formatDateRange(request.startDate, request.endDate)}
 							status={request.status}
 							days={Math.ceil(request.totalHours / 8)}
+							canDelete={canDeleteAny || deleteMutation.isPending}
+							onDelete={() => deleteMutation.mutate(request.id)}
+							isDeleting={
+								deleteMutation.isPending &&
+								deleteMutation.variables === request.id
+							}
 						/>
 					))
 				)}
@@ -280,15 +312,23 @@ function SectionHeader({
 }
 
 function TimeOffItem({
+	id,
 	type,
 	dates,
 	status,
 	days,
+	canDelete,
+	onDelete,
+	isDeleting,
 }: {
+	id: string;
 	type: string;
 	dates: string;
 	status: "approved" | "pending" | "declined";
 	days: number;
+	canDelete: boolean;
+	onDelete: () => void;
+	isDeleting: boolean;
 }) {
 	const statusConfig = {
 		approved: {
@@ -327,13 +367,30 @@ function TimeOffItem({
 					<p className="text-[12px] text-white/30">{dates}</p>
 				</div>
 			</div>
-			<div className="text-right">
-				<span className={`text-[13px] font-medium ${config.color}`}>
-					{config.label}
-				</span>
-				<p className="text-[11px] text-white/25">
-					{days} day{days !== 1 ? "s" : ""}
-				</p>
+			<div className="flex items-center gap-3">
+				<div className="text-right">
+					<span className={`text-[13px] font-medium ${config.color}`}>
+						{config.label}
+					</span>
+					<p className="text-[11px] text-white/25">
+						{days} day{days !== 1 ? "s" : ""}
+					</p>
+				</div>
+				{canDelete && (
+					<motion.button
+						type="button"
+						whileHover={{ scale: 1.1 }}
+						whileTap={{ scale: 0.9 }}
+						onClick={(e) => {
+							e.stopPropagation();
+							onDelete();
+						}}
+						disabled={isDeleting}
+						className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors disabled:opacity-50"
+					>
+						<Trash className="w-4 h-4" weight="light" />
+					</motion.button>
+				)}
 			</div>
 		</div>
 	);
@@ -397,57 +454,6 @@ function ActionItem({
 			<div className="flex items-center gap-2">
 				<div className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
 				<span className="text-[11px] text-white/25">{config.label}</span>
-			</div>
-		</div>
-	);
-}
-
-function TodaysSchedule() {
-	return (
-		<motion.section
-			initial={{ opacity: 0, y: 12 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: 0.18, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-			className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-5"
-		>
-			<SectionHeader
-				icon={Clock}
-				title="Today's Schedule"
-				subtitle="Your meetings today"
-			/>
-
-			<div className="mt-4 space-y-1">
-				<ScheduleItem time="10:00 AM" title="Team Standup" duration="30 min" />
-				<ScheduleItem
-					time="2:00 PM"
-					title="1:1 with Manager"
-					duration="30 min"
-				/>
-				<ScheduleItem time="4:00 PM" title="Project Review" duration="1 hour" />
-			</div>
-		</motion.section>
-	);
-}
-
-function ScheduleItem({
-	time,
-	title,
-	duration,
-}: {
-	time: string;
-	title: string;
-	duration: string;
-}) {
-	return (
-		<div className="group flex items-center gap-4 p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer">
-			<div className="text-[13px] font-medium text-white/50 w-[72px] shrink-0">
-				{time}
-			</div>
-			<div className="flex-1 min-w-0">
-				<p className="text-[14px] font-medium text-white/85 truncate">
-					{title}
-				</p>
-				<p className="text-[11px] text-white/30">{duration}</p>
 			</div>
 		</div>
 	);
