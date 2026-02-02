@@ -5,6 +5,7 @@ import { employeesRoutes } from "./routes/employees";
 import { leaveBalancesRoutes } from "./routes/leave-balances";
 import { leaveRequestsRoutes } from "./routes/leave-requests";
 import { managerRoutes } from "./routes/manager";
+import { rbacRoutes } from "./routes/rbac";
 
 export const api = new Elysia({ prefix: "/api" })
 	.all("/auth/*", ({ request }) => auth.handler(request))
@@ -13,6 +14,7 @@ export const api = new Elysia({ prefix: "/api" })
 	.use(approvalsRoutes)
 	.use(managerRoutes)
 	.use(employeesRoutes)
+	.use(rbacRoutes)
 	.get("/health", () => ({ status: "ok", timestamp: new Date().toISOString() }))
 	.onError(({ code, error }) => {
 		console.error(`[API Error] ${code}:`, error);

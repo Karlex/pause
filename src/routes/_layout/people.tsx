@@ -1,11 +1,12 @@
 import { Plus, Users } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { AddEmployeeModal } from "@/components/people/AddEmployeeModal";
+import { useCanCreate } from "@/hooks/usePermissions";
 import { api } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_layout/people")({
@@ -43,7 +44,19 @@ const ROLE_COLORS: Record<string, string> = {
 	super_admin: "bg-red-500/[0.08] text-red-400/80",
 };
 
+// People page is admin-only - requires users:create permission
 function PeoplePage() {
+	const canCreateUsers = useCanCreate("users");
+
+	// Redirect to team page if user doesn't have permission
+	if (!canCreateUsers) {
+		return <Navigate to="/manager" />;
+	}
+
+	return <PeoplePageContent />;
+}
+
+function PeoplePageContent() {
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
 	const { data: employeesData, isLoading } = useQuery<Employee[]>({

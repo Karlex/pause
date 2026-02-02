@@ -315,10 +315,7 @@ function TimeOffItem({
 	const StatusIcon = config.icon;
 
 	return (
-		<motion.div
-			whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-			className="group flex items-center justify-between p-3 rounded-lg bg-white/[0.02] transition-colors cursor-pointer"
-		>
+		<div className="group flex items-center justify-between p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer">
 			<div className="flex items-center gap-3">
 				<div
 					className={`w-8 h-8 rounded-lg ${config.bg} flex items-center justify-center`}
@@ -338,7 +335,7 @@ function TimeOffItem({
 					{days} day{days !== 1 ? "s" : ""}
 				</p>
 			</div>
-		</motion.div>
+		</div>
 	);
 }
 
@@ -390,10 +387,7 @@ function ActionItem({
 	const config = priorityConfig[priority];
 
 	return (
-		<motion.div
-			whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-			className="group flex items-center justify-between p-3 rounded-lg bg-white/[0.02] transition-colors cursor-pointer"
-		>
+		<div className="group flex items-center justify-between p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer">
 			<div>
 				<p className="text-[14px] font-medium text-white/85 group-hover:text-white transition-colors">
 					{title}
@@ -404,7 +398,7 @@ function ActionItem({
 				<div className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
 				<span className="text-[11px] text-white/25">{config.label}</span>
 			</div>
-		</motion.div>
+		</div>
 	);
 }
 
@@ -445,10 +439,7 @@ function ScheduleItem({
 	duration: string;
 }) {
 	return (
-		<motion.div
-			whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-			className="group flex items-center gap-4 p-3 rounded-lg bg-white/[0.02] transition-colors cursor-pointer"
-		>
+		<div className="group flex items-center gap-4 p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer">
 			<div className="text-[13px] font-medium text-white/50 w-[72px] shrink-0">
 				{time}
 			</div>
@@ -458,7 +449,7 @@ function ScheduleItem({
 				</p>
 				<p className="text-[11px] text-white/30">{duration}</p>
 			</div>
-		</motion.div>
+		</div>
 	);
 }
 

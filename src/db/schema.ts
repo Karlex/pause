@@ -15,12 +15,37 @@ import {
 
 // ============ ENUMS ============
 
+// Legacy role enum - will be migrated to new RBAC system
 export const roleEnum = pgEnum("role", [
 	"employee",
 	"team_lead",
 	"manager",
 	"hr_admin",
 	"super_admin",
+]);
+
+// RBAC Permissions
+export const permissionActionEnum = pgEnum("permission_action", [
+	"view",
+	"create",
+	"edit",
+	"delete",
+	"approve",
+]);
+
+export const permissionResourceEnum = pgEnum("permission_resource", [
+	"users",
+	"departments",
+	"roles",
+	"leave_requests",
+	"leave_policies",
+	"public_holidays",
+	"tasks",
+	"documents",
+	"notifications",
+	"timesheets",
+	"invoices",
+	"settings",
 ]);
 
 export const requestStatusEnum = pgEnum("request_status", [
@@ -78,10 +103,11 @@ export const users = pgTable("users", {
 	name: text("name").notNull(),
 	image: text("image"),
 
-	// Role & hierarchy
+	// Role & hierarchy (legacy - migrating to RBAC)
 	role: roleEnum("role").notNull().default("employee"),
-	department: text("department"),
-	managerId: text("manager_id"),
+	managerId: text("manager_id").references(() => users.id, {
+		onDelete: "set null",
+	}),
 
 	// Location & time
 	location: text("location").notNull().default("UK"),
@@ -322,6 +348,92 @@ export const auditLogs = pgTable("audit_logs", {
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ============ RBAC TABLES ============
+
+// Departments
+export const departments = pgTable("departments", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull(),
+	description: text("description"),
+	managerId: text("manager_id").references(() => users.id, {
+		onDelete: "set null",
+	}),
+	isActive: boolean("is_active").notNull().default(true),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Roles (custom roles with permissions)
+export const roles = pgTable("roles", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull(),
+	description: text("description"),
+	isSystem: boolean("is_system").notNull().default(false), // Protected system roles
+	isActive: boolean("is_active").notNull().default(true),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Permissions matrix - defines what each role can do
+export const rolePermissions = pgTable(
+	"role_permissions",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		roleId: text("role_id")
+			.notNull()
+			.references(() => roles.id, { onDelete: "cascade" }),
+		resource: permissionResourceEnum("resource").notNull(),
+		action: permissionActionEnum("action").notNull(),
+		conditions: jsonb("conditions"), // Optional conditions (e.g., "own_records_only")
+		createdAt: timestamp("created_at").notNull().defaultNow(),
+	},
+	(table) => [unique().on(table.roleId, table.resource, table.action)],
+);
+
+// User-Role junction (users can have multiple roles)
+export const userRoles = pgTable(
+	"user_roles",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		roleId: text("role_id")
+			.notNull()
+			.references(() => roles.id, { onDelete: "cascade" }),
+		departmentId: text("department_id").references(() => departments.id, {
+			onDelete: "set null",
+		}),
+		isPrimary: boolean("is_primary").notNull().default(false), // Primary role for UI
+		createdAt: timestamp("created_at").notNull().defaultNow(),
+	},
+	(table) => [unique().on(table.userId, table.roleId, table.departmentId)],
+);
+
+// Sensitive Data Access Log (for GDPR/audit)
+export const sensitiveDataAccessLogs = pgTable("sensitive_data_access_logs", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id")
+		.notNull()
+		.references(() => users.id),
+	accessedUserId: text("accessed_user_id").references(() => users.id), // Whose data was accessed
+	fieldName: text("field_name").notNull(), // e.g., "bank_details", "salary"
+	action: text("action").notNull(), // "view", "edit"
+	reason: text("reason"), // Optional reason for access
+	metadata: jsonb("metadata"), // IP, user agent
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ============ RELATIONS ============
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -341,6 +453,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 	calendarConnections: many(calendarConnections),
 	sessions: many(sessions),
 	accounts: many(accounts),
+	userRoles: many(userRoles),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -417,3 +530,56 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
+
+// RBAC Relations
+export const departmentsRelations = relations(departments, ({ one, many }) => ({
+	manager: one(users, {
+		fields: [departments.managerId],
+		references: [users.id],
+	}),
+	userRoles: many(userRoles),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+	permissions: many(rolePermissions),
+	userRoles: many(userRoles),
+}));
+
+export const rolePermissionsRelations = relations(
+	rolePermissions,
+	({ one }) => ({
+		role: one(roles, {
+			fields: [rolePermissions.roleId],
+			references: [roles.id],
+		}),
+	}),
+);
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+	user: one(users, {
+		fields: [userRoles.userId],
+		references: [users.id],
+	}),
+	role: one(roles, {
+		fields: [userRoles.roleId],
+		references: [roles.id],
+	}),
+	department: one(departments, {
+		fields: [userRoles.departmentId],
+		references: [departments.id],
+	}),
+}));
+
+export const sensitiveDataAccessLogsRelations = relations(
+	sensitiveDataAccessLogs,
+	({ one }) => ({
+		user: one(users, {
+			fields: [sensitiveDataAccessLogs.userId],
+			references: [users.id],
+		}),
+		accessedUser: one(users, {
+			fields: [sensitiveDataAccessLogs.accessedUserId],
+			references: [users.id],
+		}),
+	}),
+);

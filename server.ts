@@ -1,3 +1,10 @@
+import { config } from "dotenv";
+import { resolve } from "node:path";
+
+// Load environment variables
+config({ path: resolve(process.cwd(), ".env.local"), override: true });
+config({ path: resolve(process.cwd(), ".env") });
+
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { api } from "./src/api";

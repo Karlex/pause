@@ -1,34 +1,60 @@
 import { eq, sql } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 import { db } from "@/db";
-import { leaveBalances, leavePolicies, users } from "@/db/schema";
+import { leaveBalances, leavePolicies, userRoles, users } from "@/db/schema";
+import { logCreate } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { checkPermission } from "@/lib/permissions";
 
 export const employeesRoutes = new Elysia({ prefix: "/employees" })
-	.onBeforeHandle(async ({ request, set }) => {
-		const session = await auth.api.getSession({
-			headers: request.headers,
-		});
-
-		if (!session) {
-			set.status = 401;
-			return { error: "Unauthorized" };
-		}
-
-		// Check if user has admin permissions
-		const userRole = (session.user as { role?: string }).role;
-		if (!["hr_admin", "super_admin"].includes(userRole || "")) {
-			set.status = 403;
-			return { error: "Insufficient permissions" };
-		}
+	// Middleware: Check authentication and attach user
+	.derive(async ({ request }) => {
+		const session = await auth.api.getSession({ headers: request.headers });
+		return { user: session?.user || null };
 	})
+
+	// Get all employees
 	.get(
 		"/",
-		async ({ request }) => {
-			const session = await auth.api.getSession({
-				headers: request.headers,
+		async ({ user, set }) => {
+			if (!user) {
+				set.status = 401;
+				return { error: "Unauthorized" };
+			}
+
+			// Check permission
+			const result = await checkPermission({
+				userId: user.id,
+				resource: "users",
+				action: "view",
 			});
+
+			if (!result.allowed) {
+				set.status = 403;
+				return { error: "Forbidden" };
+			}
+
+			// If own_records_only, return only self
+			if (result.conditions?.own_records_only) {
+				const self = await db.query.users.findFirst({
+					where: eq(users.id, user.id),
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						image: true,
+						role: true,
+						location: true,
+						startDate: true,
+						createdAt: true,
+						managerId: true,
+						policyId: true,
+					},
+				});
+
+				return { employees: self ? [self] : [] };
+			}
 
 			const allUsers = await db.query.users.findMany({
 				columns: {
@@ -37,7 +63,6 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					email: true,
 					image: true,
 					role: true,
-					department: true,
 					location: true,
 					startDate: true,
 					createdAt: true,
@@ -49,34 +74,24 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 
 			// Get manager names for each user
 			const employeesWithManagers = await Promise.all(
-				allUsers.map(async (user) => {
+				allUsers.map(async (userData) => {
 					let managerName: string | undefined;
-					if (user.managerId) {
+					if (userData.managerId) {
 						const manager = await db.query.users.findFirst({
-							where: eq(users.id, user.managerId),
+							where: eq(users.id, userData.managerId),
 							columns: { name: true },
 						});
 						managerName = manager?.name ?? undefined;
 					}
 					return {
-						id: user.id,
-						name: user.name,
-						email: user.email,
-						image: user.image ?? undefined,
-						role: user.role,
-						department: user.department ?? undefined,
-						location: user.location,
-						startDate: user.startDate ?? undefined,
-						createdAt: user.createdAt,
-						managerId: user.managerId ?? undefined,
+						...userData,
 						managerName,
-						policyId: user.policyId ?? undefined,
 					};
 				}),
 			);
 
 			logger.info(
-				{ userId: session?.user?.id, count: allUsers.length },
+				{ userId: user.id, count: allUsers.length },
 				"Fetched all employees",
 			);
 
@@ -90,15 +105,14 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 							id: t.String(),
 							name: t.String(),
 							email: t.String(),
-							image: t.Optional(t.String()),
+							image: t.Nullable(t.String()),
 							role: t.String(),
-							department: t.Optional(t.String()),
 							location: t.String(),
-							startDate: t.Optional(t.String()),
+							startDate: t.Nullable(t.String()),
 							createdAt: t.Date(),
-							managerId: t.Optional(t.String()),
+							managerId: t.Nullable(t.String()),
 							managerName: t.Optional(t.String()),
-							policyId: t.Optional(t.String()),
+							policyId: t.Nullable(t.String()),
 						}),
 					),
 				}),
@@ -107,12 +121,27 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 			},
 		},
 	)
+
+	// Create employee
 	.post(
 		"/",
-		async ({ request, body, set }) => {
-			const session = await auth.api.getSession({
-				headers: request.headers,
+		async ({ body, user, set }) => {
+			if (!user) {
+				set.status = 401;
+				return { error: "Unauthorized" };
+			}
+
+			// Check permission
+			const result = await checkPermission({
+				userId: user.id,
+				resource: "users",
+				action: "create",
 			});
+
+			if (!result.allowed) {
+				set.status = 403;
+				return { error: "Forbidden" };
+			}
 
 			// Check if email already exists
 			const existingUser = await db.query.users.findFirst({
@@ -135,17 +164,14 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 				}
 			}
 
-			// Create user directly in database
-			// Note: In a real implementation, we'd need to hash the password
-			// For now, we'll use a placeholder that Better Auth can recognize
+			// Create user
 			const userId = crypto.randomUUID();
 			await db.insert(users).values({
 				id: userId,
 				email: body.email,
-				emailVerified: true, // Auto-verify for admin-created users
+				emailVerified: true,
 				name: body.name,
 				role: body.role,
-				department: body.department,
 				location: body.location ?? "UK",
 				timezone: body.timezone ?? "Europe/London",
 				startDate: body.startDate,
@@ -153,7 +179,14 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 				policyId: policyId,
 			});
 
-			// Initialize leave balances for the new user
+			// Assign default employee role in RBAC system
+			await db.insert(userRoles).values({
+				userId: userId,
+				roleId: "role_employee",
+				isPrimary: true,
+			});
+
+			// Initialize leave balances
 			if (policyId) {
 				const policy = await db.query.leavePolicies.findFirst({
 					where: eq(leavePolicies.id, policyId),
@@ -163,7 +196,6 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					const currentYear = new Date().getFullYear();
 					const leaveTypesList = await db.query.leaveTypes.findMany();
 
-					// Create balances for each leave type in the policy
 					for (const leaveType of leaveTypesList) {
 						const typeConfig = policy.config.leaveTypes[leaveType.code];
 						if (typeConfig?.enabled) {
@@ -182,8 +214,15 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 				}
 			}
 
+			// Audit log
+			await logCreate("users", userId, user.id, {
+				name: body.name,
+				email: body.email,
+				role: body.role,
+			});
+
 			logger.info(
-				{ userId: session?.user?.id, newUserId: userId },
+				{ userId: user.id, newUserId: userId },
 				"Created new employee",
 			);
 
@@ -193,7 +232,6 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					name: body.name,
 					email: body.email,
 					role: body.role,
-					department: body.department,
 					location: body.location ?? "UK",
 					startDate: body.startDate,
 					managerId: body.managerId,
@@ -212,12 +250,11 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					t.Literal("hr_admin"),
 					t.Literal("super_admin"),
 				]),
-				department: t.Optional(t.String()),
 				location: t.Optional(t.String()),
 				timezone: t.Optional(t.String()),
-				startDate: t.Optional(t.String()),
-				managerId: t.Optional(t.String()),
-				policyId: t.Optional(t.String()),
+				startDate: t.Nullable(t.String()),
+				managerId: t.Nullable(t.String()),
+				policyId: t.Nullable(t.String()),
 			}),
 			response: {
 				200: t.Object({
@@ -226,11 +263,10 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 						name: t.String(),
 						email: t.String(),
 						role: t.String(),
-						department: t.Optional(t.String()),
 						location: t.String(),
-						startDate: t.Optional(t.String()),
-						managerId: t.Optional(t.String()),
-						policyId: t.Optional(t.String()),
+						startDate: t.Nullable(t.String()),
+						managerId: t.Nullable(t.String()),
+						policyId: t.Nullable(t.String()),
 					}),
 				}),
 				400: t.Object({ error: t.String() }),
@@ -239,12 +275,15 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 			},
 		},
 	)
+
+	// Get managers list
 	.get(
 		"/managers",
-		async ({ request }) => {
-			const session = await auth.api.getSession({
-				headers: request.headers,
-			});
+		async ({ user, set }) => {
+			if (!user) {
+				set.status = 401;
+				return { error: "Unauthorized" };
+			}
 
 			const managers = await db.query.users.findMany({
 				where: sql`${users.role} IN ('manager', 'hr_admin', 'super_admin')`,
@@ -257,7 +296,7 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 			});
 
 			logger.info(
-				{ userId: session?.user?.id, count: managers.length },
+				{ userId: user.id, count: managers.length },
 				"Fetched managers list",
 			);
 
@@ -275,7 +314,6 @@ export const employeesRoutes = new Elysia({ prefix: "/employees" })
 					),
 				}),
 				401: t.Object({ error: t.String() }),
-				403: t.Object({ error: t.String() }),
 			},
 		},
 	);

@@ -18,6 +18,8 @@ import { Route as LayoutPeopleRouteImport } from './routes/_layout/people'
 import { Route as LayoutDocumentsRouteImport } from './routes/_layout/documents'
 import { Route as LayoutManagerIndexRouteImport } from './routes/_layout/manager/index'
 import { Route as LayoutApprovalsIndexRouteImport } from './routes/_layout/approvals/index'
+import { Route as LayoutAdminRolesRouteImport } from './routes/_layout/admin/roles'
+import { Route as LayoutAdminDepartmentsRouteImport } from './routes/_layout/admin/departments'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -63,6 +65,16 @@ const LayoutApprovalsIndexRoute = LayoutApprovalsIndexRouteImport.update({
   path: '/approvals/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutAdminRolesRoute = LayoutAdminRolesRouteImport.update({
+  id: '/admin/roles',
+  path: '/admin/roles',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAdminDepartmentsRoute = LayoutAdminDepartmentsRouteImport.update({
+  id: '/admin/departments',
+  path: '/admin/departments',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,6 +83,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof LayoutSettingsRoute
   '/time-off': typeof LayoutTimeOffRoute
   '/time-tracking': typeof LayoutTimeTrackingRoute
+  '/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/admin/roles': typeof LayoutAdminRolesRoute
   '/approvals/': typeof LayoutApprovalsIndexRoute
   '/manager/': typeof LayoutManagerIndexRoute
 }
@@ -81,6 +95,8 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/time-off': typeof LayoutTimeOffRoute
   '/time-tracking': typeof LayoutTimeTrackingRoute
+  '/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/admin/roles': typeof LayoutAdminRolesRoute
   '/approvals': typeof LayoutApprovalsIndexRoute
   '/manager': typeof LayoutManagerIndexRoute
 }
@@ -93,6 +109,8 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/time-off': typeof LayoutTimeOffRoute
   '/_layout/time-tracking': typeof LayoutTimeTrackingRoute
+  '/_layout/admin/departments': typeof LayoutAdminDepartmentsRoute
+  '/_layout/admin/roles': typeof LayoutAdminRolesRoute
   '/_layout/approvals/': typeof LayoutApprovalsIndexRoute
   '/_layout/manager/': typeof LayoutManagerIndexRoute
 }
@@ -105,6 +123,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/time-off'
     | '/time-tracking'
+    | '/admin/departments'
+    | '/admin/roles'
     | '/approvals/'
     | '/manager/'
   fileRoutesByTo: FileRoutesByTo
@@ -115,6 +135,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/time-off'
     | '/time-tracking'
+    | '/admin/departments'
+    | '/admin/roles'
     | '/approvals'
     | '/manager'
   id:
@@ -126,6 +148,8 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/time-off'
     | '/_layout/time-tracking'
+    | '/_layout/admin/departments'
+    | '/_layout/admin/roles'
     | '/_layout/approvals/'
     | '/_layout/manager/'
   fileRoutesById: FileRoutesById
@@ -200,6 +224,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutApprovalsIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/admin/roles': {
+      id: '/_layout/admin/roles'
+      path: '/admin/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof LayoutAdminRolesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/admin/departments': {
+      id: '/_layout/admin/departments'
+      path: '/admin/departments'
+      fullPath: '/admin/departments'
+      preLoaderRoute: typeof LayoutAdminDepartmentsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
@@ -209,6 +247,8 @@ interface LayoutRouteChildren {
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutTimeOffRoute: typeof LayoutTimeOffRoute
   LayoutTimeTrackingRoute: typeof LayoutTimeTrackingRoute
+  LayoutAdminDepartmentsRoute: typeof LayoutAdminDepartmentsRoute
+  LayoutAdminRolesRoute: typeof LayoutAdminRolesRoute
   LayoutApprovalsIndexRoute: typeof LayoutApprovalsIndexRoute
   LayoutManagerIndexRoute: typeof LayoutManagerIndexRoute
 }
@@ -219,6 +259,8 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutTimeOffRoute: LayoutTimeOffRoute,
   LayoutTimeTrackingRoute: LayoutTimeTrackingRoute,
+  LayoutAdminDepartmentsRoute: LayoutAdminDepartmentsRoute,
+  LayoutAdminRolesRoute: LayoutAdminRolesRoute,
   LayoutApprovalsIndexRoute: LayoutApprovalsIndexRoute,
   LayoutManagerIndexRoute: LayoutManagerIndexRoute,
 }
